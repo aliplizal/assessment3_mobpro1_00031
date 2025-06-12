@@ -32,3 +32,5 @@ object BukuApi {
         return "$BASE_URL$fotoUrl.jpg"
     }
 }
+
+enum class ApiStatus { LOADING, SUCCESS }
