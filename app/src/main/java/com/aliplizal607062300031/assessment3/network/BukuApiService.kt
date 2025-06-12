@@ -27,4 +27,8 @@ object BukuApi {
     val service: BukuApiService by lazy {
         retrofit.create(BukuApiService::class.java)
     }
+
+    fun getBukuUrl(fotoUrl: String): String {
+        return "$BASE_URL$fotoUrl.jpg"
+    }
 }
