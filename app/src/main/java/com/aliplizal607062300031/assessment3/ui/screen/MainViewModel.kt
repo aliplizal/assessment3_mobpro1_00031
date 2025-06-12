@@ -14,10 +14,11 @@ class MainViewModel : ViewModel() {
     }
 
     private fun retrieveData() {
+        Log.d("MainViewModel", "retrieveData() called")
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val result = BukuApi.service.getBuku()
-                Log.d("MainViewModel", "Succsess: $result")
+                Log.d("MainViewModel", "Success: $result")
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Failure: ${e.message}")
             }
