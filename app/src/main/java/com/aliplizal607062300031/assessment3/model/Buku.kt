@@ -5,6 +5,7 @@ data class Buku(
     val judul: String,
     val kategori: String,
     val status: String,
-    val gambar: String
+    val gambar: String,
+    val mine: Int?
 )
 

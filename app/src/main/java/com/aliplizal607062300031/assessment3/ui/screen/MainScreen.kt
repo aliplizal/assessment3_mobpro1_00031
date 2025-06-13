@@ -1,13 +1,15 @@
-package com.aliplizal607062300031.assessment3.ui.screen
+package com.aliplizal607062300031.assessment3.screen
 
 import android.content.ContentResolver
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,14 +17,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,11 +45,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,11 +58,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -59,28 +68,28 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
 import com.aliplizal607062300031.assessment3.BuildConfig
 import com.aliplizal607062300031.assessment3.R
 import com.aliplizal607062300031.assessment3.model.Buku
 import com.aliplizal607062300031.assessment3.model.User
 import com.aliplizal607062300031.assessment3.network.ApiStatus
-import com.aliplizal607062300031.assessment3.network.BukuApi
+import com.aliplizal607062300031.assessment3.network.ListApi
 import com.aliplizal607062300031.assessment3.network.UserDataStore
 import com.aliplizal607062300031.assessment3.ui.theme.Assessment3Theme
-import com.canhub.cropper.CropImageContract
-import com.canhub.cropper.CropImageContractOptions
-import com.canhub.cropper.CropImageOptions
-import com.canhub.cropper.CropImageView
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,19 +97,16 @@ fun MainScreen() {
     val context = LocalContext.current
     val dataStore = UserDataStore(context)
     val user by dataStore.userFlow.collectAsState(User())
-
+    var bitmap: Bitmap? by remember { mutableStateOf(null)}
+    var showListDialog by remember { mutableStateOf(false)}
+    var showDialog by remember { mutableStateOf(false) }
     val viewModel: MainViewModel = viewModel()
     val errorMessage by viewModel.errorMessage
 
-    var showDialog by remember { mutableStateOf(false) }
-    var showBukuDialog by remember { mutableStateOf(false) }
-
-    var bitmap: Bitmap? by remember { mutableStateOf(null) }
     val launcher = rememberLauncherForActivityResult(CropImageContract()) {
-        bitmap = getCroppedImage(context.contentResolver, it)
-        if (bitmap != null) showBukuDialog = true
+        bitmap = getCroppedImage(context.contentResolver,it)
+        if (bitmap != null) showListDialog=true
     }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -122,18 +128,18 @@ fun MainScreen() {
                     }) {
                         Icon(
                             painter = painterResource(R.drawable.account_circle_24),
-                            contentDescription = stringResource(R.string.profil),
+                            contentDescription = stringResource(R.string.profile),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
             )
         },
-                floatingActionButton = {
+        floatingActionButton = {
             FloatingActionButton(onClick = {
                 val options = CropImageContractOptions(
                     null, CropImageOptions(
-                        imageSourceIncludeGallery = false,
+                        imageSourceIncludeGallery = true,
                         imageSourceIncludeCamera = true,
                         fixAspectRatio = true
                     )
@@ -142,27 +148,28 @@ fun MainScreen() {
             }) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(id = R.string.tambah_hewan)
+                    contentDescription = stringResource(R.string.tambah)
                 )
             }
         }
-    ) { innerPadding ->
-        ScreenContent(user.email, viewModel, Modifier.padding(innerPadding))
-
-        if (showDialog) {
+    ){
+            innerPadding ->
+        ScreenContent(viewModel, user.email, Modifier.padding(innerPadding))
+        if (showDialog){
             ProfilDialog(
                 user = user,
-                onDismissRequest = { showDialog = false }) {
-                CoroutineScope(Dispatchers.IO).launch { signOut(context, dataStore) }
+                onDismissRequest = { showDialog = false}) {
+                CoroutineScope(Dispatchers.IO).launch { signOut(context,dataStore) }
                 showDialog = false
             }
         }
-        if (showBukuDialog) {
+        if (showListDialog) {
             BukuDialog(
                 bitmap = bitmap,
-                onDismissRequest = { showBukuDialog = false }) { judul, kategori, status ->
+                onDismissRequest = { showListDialog = false }
+            ) { judul, kategori, status ->
                 viewModel.saveData(user.email, judul, kategori, status, bitmap!!)
-                showBukuDialog = false
+                showListDialog = false
             }
         }
         if (errorMessage != null) {
@@ -173,41 +180,56 @@ fun MainScreen() {
 }
 
 @Composable
-fun ScreenContent(userId: String, viewModel: MainViewModel, modifier: Modifier = Modifier) {
+fun ScreenContent(viewModel: MainViewModel, userId: String, modifier: Modifier) {
     val data by viewModel.data
     val status by viewModel.status.collectAsState()
 
-    when (status) {
+    LaunchedEffect(userId) {
+        viewModel.retrieveData(userId)
+    }
+    when(status) {
         ApiStatus.LOADING -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
-            ) {
+            ){
                 CircularProgressIndicator()
             }
         }
-
         ApiStatus.SUCCESS -> {
             LazyVerticalGrid(
                 modifier = modifier.fillMaxSize().padding(4.dp),
                 columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                items(data) { ListItem(buku = it) }
+                items(data) {
+                    ListItem(
+                        buku = it,
+                        userId = userId,
+                        onDelete = { id ->
+                            viewModel.deleteData(userId, id)
+                        },
+                        onEdit = { id, judul, kategori, status, bitmap ->
+                            if (bitmap != null) {
+                                viewModel.updateData(userId, id, judul, kategori, status, bitmap)
+                            }
+                        }
+
+                    )
+                }
             }
         }
-
         ApiStatus.FAILED -> {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            ){
                 Text(text = stringResource(id = R.string.error))
                 Button(
                     onClick = { viewModel.retrieveData(userId) },
                     modifier = Modifier.padding(top = 16.dp),
-                    contentPadding = PaddingValues(horizontal=32.dp, vertical=16.dp)
+                    contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
                 ) {
                     Text(text = stringResource(id = R.string.try_again))
                 }
@@ -217,44 +239,130 @@ fun ScreenContent(userId: String, viewModel: MainViewModel, modifier: Modifier =
 }
 
 @Composable
-fun ListItem(buku: Buku) {
+fun ListItem(
+    buku: Buku,
+    userId: String,
+    onDelete: (String) -> Unit,
+    onEdit: (String, String, String, String, Bitmap) -> Unit
+) {
+    var showDialogDelete by remember { mutableStateOf(false) }
+    var currentBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var showDialogEdit by remember { mutableStateOf(false) }
+
     Box(
-        modifier = Modifier.padding(4.dp).border(1.dp, Color.Gray),
+        modifier = Modifier
+            .padding(4.dp)
+            .border(1.dp, Color.Gray),
         contentAlignment = Alignment.BottomCenter
-    ){
+    ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(BukuApi.getBukuUrl(buku.gambar))
+                .data(ListApi.getListUrl(buku.gambar))
                 .crossfade(true)
                 .build(),
-            contentDescription = stringResource(R.string.gambar, buku.judul),
+            contentDescription = stringResource(R.string.gambar),
             contentScale = ContentScale.Crop,
             placeholder = painterResource(id = R.drawable.loading_img),
             error = painterResource(id = R.drawable.broken_img),
-            modifier = Modifier.fillMaxWidth().padding(4.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)
+                .height(180.dp),
+            onSuccess = { result ->
+                val drawable = result.result.drawable
+                if (drawable is BitmapDrawable) {
+                    currentBitmap = drawable.bitmap
+                }
+            }
         )
+
         Column(
-            modifier = Modifier.fillMaxWidth().padding(4.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)
                 .background(Color(red = 0f, green = 0f, blue = 0f, alpha = 0.5f))
                 .padding(4.dp)
         ) {
             Text(
                 text = buku.judul,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color.White,
             )
             Text(
-                text = buku.kategori,
-                fontStyle = FontStyle.Italic,
-                fontSize = 14.sp,
-                color = Color.White
+                text = "Kategori: ${buku.kategori}",
+                color = Color.White,
             )
             Text(
-                text = buku.status,
-                fontStyle = FontStyle.Italic,
-                fontSize = 14.sp,
-                color = Color.White
+                text = "Status: ${buku.status}",
+                color = Color.White,
             )
+        }
+
+        if (buku.mine == 1) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+            ) {
+                IconButton(
+                    onClick = { showDialogDelete = true },
+                    modifier = Modifier
+                        .background(Color(0f, 0f, 0f, 0.2f), shape = CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.hapus),
+                        tint = Color.White
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                IconButton(
+                    onClick = { showDialogEdit = true },
+                    modifier = Modifier
+                        .background(Color(0f, 0f, 0f, 0.5f), shape = CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = Color.White
+                    )
+                }
+            }
+
+            if (showDialogDelete) {
+                AlertDialog(
+                    onDismissRequest = { showDialogDelete = false },
+                    title = { Text(text = stringResource(R.string.konfirmasi)) },
+                    text = { Text(text = stringResource(R.string.dialoghapus)) },
+                    confirmButton = {
+                        Button(onClick = {
+                            showDialogDelete = false
+                            onDelete(buku.id)
+                        }) {
+                            Text(text = stringResource(R.string.hapus))
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { showDialogDelete = false }) {
+                            Text(text = stringResource(R.string.batal))
+                        }
+                    }
+                )
+            }
+
+            if (showDialogEdit) {
+                EditDialog(
+                    initialNama = buku.judul,
+                    initialKategori = buku.kategori,
+                    initialStatus = buku.status,
+                    initialBitmap = currentBitmap,
+                    onDismissRequest = { showDialogEdit = false },
+                    onConfirmation = { judul, kategori, status, bitmap ->
+                        showDialogEdit = false
+                        onEdit(buku.id, judul, kategori, status, bitmap)
+                    }
+                )
+            }
         }
     }
 }
@@ -273,27 +381,32 @@ private suspend fun signIn(context: Context, dataStore: UserDataStore) {
         val credentialManager = CredentialManager.create(context)
         val result = credentialManager.getCredential(context, request)
         handleSignIn(result, dataStore)
+    } catch (e: NoCredentialException) {
+        Log.e("SIGN-IN", "No credentials available.")
     } catch (e: GetCredentialException) {
         Log.e("SIGN-IN", "Error: ${e.errorMessage}")
     }
 }
 
-private suspend fun handleSignIn(result: GetCredentialResponse, dataStore: UserDataStore) {
+private suspend fun handleSignIn(
+    result: GetCredentialResponse,
+    dataStore: UserDataStore
+) {
     val credential = result.credential
     if (credential is CustomCredential &&
         credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
         try {
-            val googleIdToken = GoogleIdTokenCredential.createFrom(credential.data)
-            val nama = googleIdToken.displayName ?: ""
-            val email = googleIdToken.id
-            val photoUrl = googleIdToken.profilePictureUri.toString()
-            dataStore.saveData(User(nama, email, photoUrl))
-        } catch (e: GoogleIdTokenParsingException) {
+            val googleId = GoogleIdTokenCredential.createFrom(credential.data)
+            val name = googleId.displayName ?: ""
+            val email = googleId.id
+            val photoUrl = googleId.profilePictureUri.toString()
+            dataStore.saveData(User(name, email, photoUrl))
+        } catch (e: GoogleIdTokenParsingException){
             Log.e("SIGN-IN", "Error: ${e.message}")
         }
     }
     else {
-        Log.e("SIGN-IN", "Error: unrecognized custom credential type.")
+        Log.e("SIGN-IN", "Error: unrecognized credential type")
     }
 }
 
@@ -309,12 +422,13 @@ private suspend fun signOut(context: Context, dataStore: UserDataStore) {
     }
 }
 
+
 private fun getCroppedImage(
     resolver: ContentResolver,
     result: CropImageView.CropResult
 ): Bitmap? {
     if (!result.isSuccessful) {
-        Log.e("IMAGE", "Error: ${result.error}")
+        Log.e("gambar", "Error: ${result.error}")
         return null
     }
 
@@ -327,6 +441,7 @@ private fun getCroppedImage(
         ImageDecoder.decodeBitmap(source)
     }
 }
+
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable

@@ -1,4 +1,4 @@
-package com.aliplizal607062300031.assessment3.ui.screen
+package com.aliplizal607062300031.assessment3.screen
 
 import android.graphics.Bitmap
 import android.util.Log
@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aliplizal607062300031.assessment3.model.Buku
 import com.aliplizal607062300031.assessment3.network.ApiStatus
-import com.aliplizal607062300031.assessment3.network.BukuApi
+import com.aliplizal607062300031.assessment3.network.ListApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -19,21 +19,19 @@ import java.io.ByteArrayOutputStream
 class MainViewModel : ViewModel() {
 
     var data = mutableStateOf(emptyList<Buku>())
-            private set
+        private set
 
     var status = MutableStateFlow(ApiStatus.LOADING)
-            private set
+        private set
 
     var errorMessage = mutableStateOf<String?>(null)
-            private set
-
+        private set
 
     fun retrieveData(userId: String) {
-        Log.d("MainViewModel", "retrieveData() called")
         viewModelScope.launch(Dispatchers.IO) {
             status.value = ApiStatus.LOADING
             try {
-                data.value = BukuApi.service.getBuku(userId)
+                data.value = ListApi.service.getList(userId)
                 status.value = ApiStatus.SUCCESS
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Failure: ${e.message}")
@@ -41,10 +39,11 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
     fun saveData(userId: String, judul: String, kategori: String, status: String, bitmap: Bitmap) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val result = BukuApi.service.postHewan(
+                val result = ListApi.service.postBuku(
                     userId,
                     judul.toRequestBody("text/plain".toMediaTypeOrNull()),
                     kategori.toRequestBody("text/plain".toMediaTypeOrNull()),
@@ -58,6 +57,47 @@ class MainViewModel : ViewModel() {
                     throw Exception(result.message)
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Failure: ${e.message}")
+            }
+        }
+    }
+
+    fun updateData(userId: String, bukuId: String, judul: String, kategori: String, status: String, bitmap: Bitmap) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = ListApi.service.editBuku(
+                    userId,
+                    bukuId,
+                    judul.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    kategori.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    status.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    bitmap.toMultipartBody()
+                )
+
+                if(result.status == "success")
+                    retrieveData(userId)
+                else
+                    throw Exception(result.message)
+            } catch (e: Exception) {
+                Log.d("MainViewModel", "Failure: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteData(userId: String, bukuId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = ListApi.service.deleteBuku(
+                    userId,
+                    bukuId
+                )
+
+                if(result.status == "success"){
+                    retrieveData(userId)
+                } else {
+                    throw Exception(result.message)
+                }
+            } catch (e: Exception) {
+                Log.d("MainViewModel", "Error delete: ${e.message}")
                 errorMessage.value = "Error: ${e.message}"
             }
         }
@@ -65,12 +105,15 @@ class MainViewModel : ViewModel() {
 
     private fun Bitmap.toMultipartBody(): MultipartBody.Part {
         val stream = ByteArrayOutputStream()
-        compress(Bitmap.CompressFormat.JPEG, 60, stream)
+        compress(Bitmap.CompressFormat.JPEG, 80, stream)
         val byteArray = stream.toByteArray()
         val requestBody = byteArray.toRequestBody(
-            "image/jpg".toMediaTypeOrNull(), 0, byteArray.size)
+            "image/jpg".toMediaTypeOrNull(), 0, byteArray.size
+        )
         return MultipartBody.Part.createFormData(
-            "image", "image.jpg", requestBody)
+            "gambar", "image.jpg", requestBody
+        )
     }
+
     fun clearMessage() { errorMessage.value = null }
 }

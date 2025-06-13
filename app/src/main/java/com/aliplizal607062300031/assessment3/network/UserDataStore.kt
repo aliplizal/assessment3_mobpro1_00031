@@ -10,13 +10,13 @@ import com.aliplizal607062300031.assessment3.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-val Context.dataStore : DataStore<Preferences> by preferencesDataStore(
-    name = "user_preference"
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "user_preferences"
 )
 
 class UserDataStore(private val context: Context) {
 
-    companion object {
+    companion object{
         private val USER_NAME = stringPreferencesKey("name")
         private val USER_EMAIL = stringPreferencesKey("email")
         private val USER_PHOTO = stringPreferencesKey("photoUrl")
@@ -30,7 +30,7 @@ class UserDataStore(private val context: Context) {
         )
     }
 
-    suspend fun saveData(user: User) {
+    suspend fun saveData(user: User){
         context.dataStore.edit { preferences ->
             preferences[USER_NAME] = user.name
             preferences[USER_EMAIL] = user.email

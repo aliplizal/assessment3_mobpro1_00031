@@ -1,4 +1,4 @@
-package com.aliplizal607062300031.assessment3.ui.screen
+package com.aliplizal607062300031.assessment3.screen
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
@@ -37,12 +37,12 @@ import com.aliplizal607062300031.assessment3.ui.theme.Assessment3Theme
 fun ProfilDialog(
     user: User,
     onDismissRequest: () -> Unit,
-    onConfirmation: () -> Unit
-) {
-    Dialog(onDismissRequest = { onDismissRequest() }) {
+    onConfirmation: () -> Unit,
+){
+    Dialog(onDismissRequest = {onDismissRequest() }) {
         Card(
             modifier = Modifier.padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(16.dp)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -57,7 +57,8 @@ fun ProfilDialog(
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(id = R.drawable.loading_img),
                     error = painterResource(id = R.drawable.broken_img),
-                    modifier = Modifier.size(100.dp).clip(CircleShape)
+                    modifier = Modifier.size(100.dp)
+                        .clip(CircleShape)
                 )
                 Text(
                     text = user.name,
@@ -68,21 +69,21 @@ fun ProfilDialog(
                 )
                 Text(
                     text = user.email,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                     horizontalArrangement = Arrangement.Center
-                ) {
+                ){
                     OutlinedButton(
-                        onClick = { onDismissRequest() },
+                        onClick = {onDismissRequest()},
                         modifier = Modifier.padding(8.dp)
                     ) {
                         Text(stringResource(R.string.tutup))
                     }
                     OutlinedButton(
-                        onClick = { onConfirmation() },
+                        onClick = {onConfirmation()},
                         modifier = Modifier.padding(8.dp),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                     ) {
@@ -103,7 +104,7 @@ fun ProfilDialog(
 fun DialogPreview() {
     Assessment3Theme {
         ProfilDialog(
-            user = User("Alip Lizal", "alifputra8594@gmail.com", ""),
+            user = User("Defina Salsabila", "defina.trisalsabila05@gmail.com", ""),
             onDismissRequest = {},
             onConfirmation = {}
         )
