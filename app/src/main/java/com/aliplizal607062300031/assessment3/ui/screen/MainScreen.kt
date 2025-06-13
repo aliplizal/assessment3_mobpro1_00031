@@ -210,9 +210,9 @@ fun ScreenContent(viewModel: MainViewModel, userId: String, modifier: Modifier) 
                             viewModel.deleteData(userId, id)
                         },
                         onEdit = { id, judul, kategori, status, bitmap ->
-                            if (bitmap != null) {
+//                            if (bitmap != null) {
                                 viewModel.updateData(userId, id, judul, kategori, status, bitmap)
-                            }
+                            //}
                         }
 
                     )

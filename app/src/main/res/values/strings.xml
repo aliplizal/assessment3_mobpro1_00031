@@ -8,7 +8,6 @@
     <string name="profile">Profile</string>
     <string name="tutup">Tutup</string>
     <string name="logout">Logout</string>
-    <string name="tambah_hewan">Tambah Hewan</string>
     <string name="nama">Nama barang</string>
     <string name="batal">Batal</string>
     <string name="simpan">Simpan</string>
@@ -22,9 +21,8 @@
     <string name="sumbergambar">sumber gambar</string>
     <string name="foto">Foto</string>
     <string name="camera">Camera</string>
-
-        <string name="profil">Profil</string>
-        <string name="judul">Judul</string>
-        <string name="kategori">Kategori</string>
-        <string name="status">Status</string>
+    <string name="profil">Profil</string>
+    <string name="judul">Judul</string>
+    <string name="kategori">Kategori</string>
+    <string name="status">Status</string>
 </resources>
