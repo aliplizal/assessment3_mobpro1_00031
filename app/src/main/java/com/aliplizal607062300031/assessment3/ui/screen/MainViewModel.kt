@@ -27,16 +27,13 @@ class MainViewModel : ViewModel() {
     var errorMessage = mutableStateOf<String?>(null)
             private set
 
-    init {
-        retrieveData()
-    }
 
-    fun retrieveData() {
+    fun retrieveData(userId: String) {
         Log.d("MainViewModel", "retrieveData() called")
         viewModelScope.launch(Dispatchers.IO) {
             status.value = ApiStatus.LOADING
             try {
-                data.value = BukuApi.service.getBuku()
+                data.value = BukuApi.service.getBuku(userId)
                 status.value = ApiStatus.SUCCESS
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Failure: ${e.message}")
@@ -56,7 +53,7 @@ class MainViewModel : ViewModel() {
                 )
 
                 if (result.status == "success")
-                    retrieveData()
+                    retrieveData(userId)
                 else
                     throw Exception(result.message)
             } catch (e: Exception) {
@@ -68,7 +65,7 @@ class MainViewModel : ViewModel() {
 
     private fun Bitmap.toMultipartBody(): MultipartBody.Part {
         val stream = ByteArrayOutputStream()
-        compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        compress(Bitmap.CompressFormat.JPEG, 60, stream)
         val byteArray = stream.toByteArray()
         val requestBody = byteArray.toRequestBody(
             "image/jpg".toMediaTypeOrNull(), 0, byteArray.size)

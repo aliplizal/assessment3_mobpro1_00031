@@ -147,7 +147,7 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        ScreenContent(viewModel, Modifier.padding(innerPadding))
+        ScreenContent(user.email, viewModel, Modifier.padding(innerPadding))
 
         if (showDialog) {
             ProfilDialog(
@@ -169,19 +169,11 @@ fun MainScreen() {
             Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
             viewModel.clearMessage()
         }
-        if (showBukuDialog) {
-            BukuDialog(
-                bitmap = bitmap,
-                onDismissRequest = { showBukuDialog = false }) { judul, kategori, status ->
-                Log.d("TAMBAH", "$judul $kategori $status ditambahkan.")
-                showBukuDialog = false
-            }
-        }
     }
 }
 
 @Composable
-fun ScreenContent(viewModel: MainViewModel, modifier: Modifier = Modifier) {
+fun ScreenContent(userId: String, viewModel: MainViewModel, modifier: Modifier = Modifier) {
     val data by viewModel.data
     val status by viewModel.status.collectAsState()
 
@@ -213,7 +205,7 @@ fun ScreenContent(viewModel: MainViewModel, modifier: Modifier = Modifier) {
             ) {
                 Text(text = stringResource(id = R.string.error))
                 Button(
-                    onClick = { viewModel.retrieveData() },
+                    onClick = { viewModel.retrieveData(userId) },
                     modifier = Modifier.padding(top = 16.dp),
                     contentPadding = PaddingValues(horizontal=32.dp, vertical=16.dp)
                 ) {
@@ -232,7 +224,7 @@ fun ListItem(buku: Buku) {
     ){
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(BukuApi.getBukuUrl(buku.fotoUrl))
+                .data(BukuApi.getBukuUrl(buku.gambar))
                 .crossfade(true)
                 .build(),
             contentDescription = stringResource(R.string.gambar, buku.judul),

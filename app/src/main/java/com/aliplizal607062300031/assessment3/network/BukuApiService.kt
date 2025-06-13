@@ -14,7 +14,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 
-private const val BASE_URL = "https://manajemenbacabuku.rf.gd/"
+private const val BASE_URL = "https://buku-api-production-28de.up.railway.app/api/"
 
 private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -26,16 +26,19 @@ private val retrofit = Retrofit.Builder()
     .build()
 
 interface BukuApiService {
-    @GET("read.php")
-    suspend fun getBuku(): List<Buku>
+    @GET("buku")
+    suspend fun getBuku(
+        @Header("Authorization") userId: String
+    ): List<Buku>
+
     @Multipart
-    @POST("buku.php")
+    @POST("buku/store")
     suspend fun postHewan(
         @Header("Authorization") userId: String,
         @Part("judul") judul: RequestBody,
         @Part("kategori") kategori: RequestBody,
         @Part("status") status: RequestBody,
-        @Part image: MultipartBody.Part
+        @Part gambar: MultipartBody.Part
     ): OpStatus
 }
 
@@ -44,8 +47,8 @@ object BukuApi {
         retrofit.create(BukuApiService::class.java)
     }
 
-    fun getBukuUrl(fotoUrl: String): String {
-        return "$BASE_URL$fotoUrl.jpg"
+    fun getBukuUrl(gambar: String): String {
+        return "https://buku-api-production-28de.up.railway.app/api/storage/$gambar"
     }
 }
 
