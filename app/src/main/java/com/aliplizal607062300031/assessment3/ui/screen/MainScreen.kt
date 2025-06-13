@@ -1,4 +1,4 @@
-package com.aliplizal607062300031.assessment3.screen
+package com.aliplizal607062300031.assessment3.ui.screen
 
 import android.content.ContentResolver
 import android.content.Context

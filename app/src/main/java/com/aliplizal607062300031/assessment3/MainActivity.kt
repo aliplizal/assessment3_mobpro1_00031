@@ -8,7 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.aliplizal607062300031.assessment3.screen.MainScreen
+import com.aliplizal607062300031.assessment3.ui.screen.MainScreen
 import com.aliplizal607062300031.assessment3.ui.theme.Assessment3Theme
 
 class MainActivity : ComponentActivity() {
