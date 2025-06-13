@@ -80,6 +80,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingExcept
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +88,9 @@ fun MainScreen() {
     val context = LocalContext.current
     val dataStore = UserDataStore(context)
     val user by dataStore.userFlow.collectAsState(User())
+
+    val viewModel: MainViewModel = viewModel()
+    val errorMessage by viewModel.errorMessage
 
     var showDialog by remember { mutableStateOf(false) }
     var showBukuDialog by remember { mutableStateOf(false) }
@@ -143,7 +147,7 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        ScreenContent(Modifier.padding(innerPadding))
+        ScreenContent(viewModel, Modifier.padding(innerPadding))
 
         if (showDialog) {
             ProfilDialog(
@@ -157,6 +161,18 @@ fun MainScreen() {
             BukuDialog(
                 bitmap = bitmap,
                 onDismissRequest = { showBukuDialog = false }) { judul, kategori, status ->
+                viewModel.saveData(user.email, judul, kategori, status, bitmap!!)
+                showBukuDialog = false
+            }
+        }
+        if (errorMessage != null) {
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+            viewModel.clearMessage()
+        }
+        if (showBukuDialog) {
+            BukuDialog(
+                bitmap = bitmap,
+                onDismissRequest = { showBukuDialog = false }) { judul, kategori, status ->
                 Log.d("TAMBAH", "$judul $kategori $status ditambahkan.")
                 showBukuDialog = false
             }
@@ -165,8 +181,7 @@ fun MainScreen() {
 }
 
 @Composable
-fun ScreenContent(modifier: Modifier = Modifier) {
-    val viewModel: MainViewModel = viewModel()
+fun ScreenContent(viewModel: MainViewModel, modifier: Modifier = Modifier) {
     val data by viewModel.data
     val status by viewModel.status.collectAsState()
 
